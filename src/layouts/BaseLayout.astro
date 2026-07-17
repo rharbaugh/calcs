@@ -21,18 +21,36 @@ const base = import.meta.env.BASE_URL;
   </head>
   <body>
     <header class="site-header">
-      <div class="shell header-content">
-        <a class="brand" href={base}>Tibia Calculators</a>
-        <nav aria-label="Main navigation">
-          <a href={`${base}calculators/speed/`}>Speed</a>
-        </nav>
+      <div class="header-content">
+        <a class="brand" href={base}>Tibia Calcs</a>
+        <div class="active-character-control" id="active-character-control" hidden>
+          <button class="active-character" id="active-character" type="button" aria-haspopup="true" aria-expanded="false">
+          <img class="active-character-icon" id="active-character-icon" alt="" aria-hidden="true" />
+          <span class="active-character-summary">
+            <strong id="active-character-name"></strong>
+            <small id="active-character-details"></small>
+          </span>
+          <span class="active-character-stats" aria-label="Character stats">
+            <span class="level-stat"><i aria-hidden="true">◆</i><b id="active-character-level"></b></span>
+            <span class="health-stat"><i aria-hidden="true">♥</i><b id="active-character-hp"></b></span>
+            <span class="mana-stat"><i aria-hidden="true">✦</i><b id="active-character-mana"></b></span>
+          </span>
+          </button>
+          <div class="character-modal" id="character-menu" hidden>
+            <div class="character-menu" aria-label="Select character">
+              <div class="character-menu-title">Selected character</div>
+              <div class="character-menu-list" id="character-menu-list"></div>
+              <button class="character-menu-add" id="character-menu-add" type="button">+ Look up another character</button>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
     <main class="shell">
       <slot />
     </main>
     <footer class="site-footer">
-      <div class="shell">Unofficial fan-made tools for Tibia players.</div>
+      <div class="shell">An unofficial fan project by Fanoka/Rob. Tibia is the property of CipSoft GmbH.</div>
     </footer>
   </body>
 </html>
@@ -40,28 +58,239 @@ const base = import.meta.env.BASE_URL;
 <style is:global>
   :root {
     color-scheme: dark;
-    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-    background: #111827;
-    color: #e5e7eb;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    background: #3b3b3b;
+    color: #dedede;
   }
 
   * { box-sizing: border-box; }
-  body { margin: 0; min-width: 320px; }
-  a { color: #7dd3fc; }
-  a:hover { color: #bae6fd; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-width: 320px; min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: #dedede; }
+  a:hover { color: #fff; }
   .shell { width: min(100% - 2rem, 68rem); margin-inline: auto; }
-  .site-header { border-bottom: 1px solid #334155; background: #0f172a; }
-  .header-content { min-height: 4rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .brand { color: #f8fafc; font-weight: 750; text-decoration: none; }
-  nav { display: flex; gap: 1rem; }
-  nav a { text-decoration: none; }
-  main { min-height: calc(100vh - 8rem); padding-block: 3rem; }
-  .site-footer { border-top: 1px solid #334155; color: #94a3b8; font-size: 0.875rem; padding-block: 1.5rem; }
-  .eyebrow { color: #67e8f9; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  main.shell { width: 100%; margin-inline: 0; padding-inline: 1rem; }
+  .site-header {
+    border-top: 1px solid #5d5d5d;
+    border-bottom: 1px solid #151515;
+    background: #414141;
+  }
+  .header-content {
+    position: relative;
+    width: 100%;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+  }
+  .brand { color: #eee; font-size: 0.78rem; font-weight: 700; text-decoration: none; text-shadow: 1px 1px #111; }
+  .active-character-control { position: absolute; right: 1rem; top: 0; bottom: 0; display: flex; align-items: center; }
+  .active-character { display: flex; align-items: center; gap: 0.4rem; height: 100%; border: 1px solid transparent; padding: 0 0.4rem; background: transparent; color: #e5e5e5; font: inherit; font-size: 0.68rem; line-height: 1.05; text-align: left; cursor: pointer; }
+  .active-character:hover, .active-character:focus-visible, .active-character[aria-expanded="true"] { border-color: #5f5f5f; background: #4d4d4d; box-shadow: inset 1px 1px #595959; color: #fff; outline: 0; }
+  .active-character-icon { width: 1rem; height: 1rem; flex: none; object-fit: contain; }
+  .active-character strong, .active-character small { display: block; }
+  .active-character strong { font-size: 0.72rem; }
+  .active-character small { color: #aaa; font-size: 0.62rem; margin-top: 0.1rem; }
+  .active-character-stats { display: flex; align-items: center; gap: 0.35rem; margin-left: 0.2rem; padding-left: 0.45rem; border-left: 1px solid #5a5a5a; }
+  .active-character-stats span { display: flex; align-items: center; gap: 0.12rem; }
+  .active-character-stats i { font-size: 0.62rem; font-style: normal; }
+  .active-character-stats b { color: #dedede; font-size: 0.62rem; }
+  .level-stat i { color: #d5d5d5; }
+  .health-stat i { color: #dc5a5a; }
+  .mana-stat i { color: #6ca8e8; }
+  .character-modal { position: absolute; z-index: 30; top: 100%; right: 0; padding-top: 0.2rem; }
+  .character-menu { width: min(22rem, calc(100vw - 1.5rem)); border: 1px solid #777; background: #3d3d3d; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5); padding: 0.35rem; }
+  .character-menu-title { border-bottom: 1px solid #5b5b5b; color: #cfcfcf; font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.25rem 0.45rem; text-transform: uppercase; }
+  .character-menu-row { display: flex; align-items: center; gap: 0.35rem; }
+  .character-menu-select { min-width: 0; flex: 1; border: 0; background: transparent; color: #ececec; padding: 0.4rem; font: 700 0.7rem Tahoma, Verdana, Arial, sans-serif; text-align: left; cursor: pointer; }
+  .character-menu-select:hover, .character-menu-select:focus { background: #575757; outline: 0; }
+  .character-menu-select small { display: block; color: #aaa; font-size: 0.62rem; font-weight: 400; margin-top: 0.1rem; }
+  .character-menu-remove { border: 0; background: transparent; color: #bcbcbc; padding: 0.35rem; font: 700 0.8rem Tahoma, Verdana, Arial, sans-serif; cursor: pointer; }
+  .character-menu-remove:hover, .character-menu-remove:focus { color: #f08b8b; outline: 0; }
+  .character-menu-add { display: block; width: 100%; border: 0; border-top: 1px solid #5b5b5b; margin-top: 0.2rem; padding: 0.45rem 0.4rem 0.25rem; background: transparent; color: #dedede; font: 700 0.68rem Tahoma, Verdana, Arial, sans-serif; text-align: left; cursor: pointer; }
+  .character-menu-add:hover { color: #fff; }
+  main { flex: 1; padding-block: 1.25rem 3rem; }
+  .site-footer { border-top: 1px solid #202020; background: #292929; color: #aaa; font-size: 0.68rem; padding-block: 0.275rem; }
+  .eyebrow { color: #cfcfcf; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
   h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.05; margin: 0.5rem 0 1rem; }
-  .lede { color: #cbd5e1; font-size: 1.15rem; line-height: 1.6; max-width: 44rem; }
-  .card { border: 1px solid #334155; border-radius: 0.75rem; background: #172033; padding: 1.5rem; }
+  .lede { color: #c5c5c5; font-size: 1.05rem; line-height: 1.6; max-width: 44rem; }
+  .card { border: 1px solid #626262; border-radius: 0; background: #484848; box-shadow: inset 1px 1px #555, 1px 1px #2b2b2b; padding: 1.5rem; }
   .card h2 { margin-top: 0; }
   .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin-top: 2rem; }
-  .coming-soon { color: #a5f3fc; }
+  .coming-soon { color: #cfcfcf; }
+
+  @media (min-width: 36rem) {
+    .header-content { padding-inline: 1.5rem; }
+    .active-character-control { right: 1.5rem; }
+    main.shell { padding-inline: 1.5rem; }
+  }
+
+  @media (min-width: 62rem) {
+    .header-content { padding-inline: 2rem; }
+    .active-character-control { right: 2rem; }
+    main.shell { padding-inline: 2rem; }
+  }
+
+  @media (max-width: 30rem) {
+    .header-content { padding-inline: 0.75rem; }
+    .brand { font-size: 0.69rem; }
+    .active-character-control { right: 0.75rem; }
+    .active-character small { display: none; }
+    .active-character-stats { gap: 0.25rem; margin-left: 0; padding-left: 0.3rem; }
+    .active-character-stats b { font-size: 0.58rem; }
+  }
 </style>
+
+<script>
+  type StoredCharacter = { name: string; level: number; vocation: string; hitpoints?: number; mana?: number };
+  const charactersKey = 'tibia-calcs:characters:v1';
+  const selectedKey = 'tibia-calcs:selected-character:v1';
+  const legacyKey = 'tibia-calcs:character:v1';
+  const control = document.querySelector<HTMLElement>('#active-character-control')!;
+  const trigger = document.querySelector<HTMLButtonElement>('#active-character')!;
+  const menu = document.querySelector<HTMLElement>('#character-menu')!;
+  const menuPanel = menu.querySelector<HTMLElement>('.character-menu')!;
+  const menuList = document.querySelector<HTMLElement>('#character-menu-list')!;
+  const vocationIcon = document.querySelector<HTMLImageElement>('#active-character-icon')!;
+  const vocationIcons: Record<string, string> = {
+    knight: new URL('../assets/vocations/knight.svg', import.meta.url).href,
+    paladin: new URL('../assets/vocations/paladin.svg', import.meta.url).href,
+    sorcerer: new URL('../assets/vocations/sorcerer.svg', import.meta.url).href,
+    druid: new URL('../assets/vocations/druid.svg', import.meta.url).href,
+    monk: new URL('../assets/vocations/monk.svg', import.meta.url).href,
+  };
+
+  const readCharacters = (): StoredCharacter[] => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(charactersKey) ?? '[]');
+      if (Array.isArray(saved)) return saved.filter((item): item is StoredCharacter => Boolean(item?.name));
+    } catch { /* reset below */ }
+    return [];
+  };
+  const writeCharacters = (characters: StoredCharacter[]) => localStorage.setItem(charactersKey, JSON.stringify(characters));
+  const selectedCharacter = () => {
+    const characters = readCharacters();
+    const name = localStorage.getItem(selectedKey);
+    return characters.find((character) => character.name === name) ?? characters[0];
+  };
+
+  const showActiveCharacter = (character: StoredCharacter | undefined) => {
+    if (!character) {
+      control.hidden = true;
+      return;
+    }
+    try {
+      const name = document.querySelector<HTMLElement>('#active-character-name');
+      const details = document.querySelector<HTMLElement>('#active-character-details');
+      const level = document.querySelector<HTMLElement>('#active-character-level');
+      const hp = document.querySelector<HTMLElement>('#active-character-hp');
+      const mana = document.querySelector<HTMLElement>('#active-character-mana');
+
+      if (name && details && level && hp && mana && character.name) {
+        name.textContent = character.name;
+        details.textContent = `${character.level} ${character.vocation}`;
+        const vocation = Object.keys(vocationIcons).find((name) => character.vocation.toLowerCase().includes(name));
+        vocationIcon.src = vocation ? vocationIcons[vocation] : vocationIcons.knight;
+        level.textContent = `Lvl ${character.level}`;
+        hp.textContent = String(character.hitpoints ?? '—');
+        mana.textContent = String(character.mana ?? '—');
+        control.hidden = false;
+      }
+    } catch {
+      localStorage.removeItem('tibia-calcs:character:v1');
+    }
+  };
+
+  const renderMenu = () => {
+    const activeName = localStorage.getItem(selectedKey);
+    menuList.replaceChildren(...readCharacters().map((character) => {
+      const row = document.createElement('div');
+      row.className = 'character-menu-row';
+      const select = document.createElement('button');
+      select.className = 'character-menu-select';
+      select.type = 'button';
+      select.dataset.selectCharacter = character.name;
+      select.innerHTML = `${character.name}<small>${character.level} ${character.vocation}${character.name === activeName ? ' · selected' : ''}</small>`;
+      const remove = document.createElement('button');
+      remove.className = 'character-menu-remove';
+      remove.type = 'button';
+      remove.dataset.removeCharacter = character.name;
+      remove.setAttribute('aria-label', `Remove ${character.name}`);
+      remove.textContent = '×';
+      row.append(select, remove);
+      return row;
+    }));
+  };
+
+  const selectCharacter = (character: StoredCharacter) => {
+    localStorage.setItem(selectedKey, character.name);
+    localStorage.setItem(legacyKey, JSON.stringify(character));
+    showActiveCharacter(character);
+    renderMenu();
+    window.dispatchEvent(new CustomEvent('tibia-active-character-changed', { detail: character }));
+  };
+
+  try {
+    if (readCharacters().length === 0) {
+      const legacy = localStorage.getItem(legacyKey);
+      if (legacy) writeCharacters([JSON.parse(legacy)]);
+    }
+  } catch {
+    localStorage.removeItem(legacyKey);
+  }
+
+  const initialCharacter = selectedCharacter();
+  if (initialCharacter) {
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    selectCharacter(initialCharacter);
+  }
+
+  trigger.addEventListener('click', () => {
+    const open = menu.hidden;
+    menu.hidden = !open;
+    trigger.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', (event) => {
+    if (!control.contains(event.target as Node) && !menuPanel.contains(event.target as Node)) {
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+  document.querySelector<HTMLButtonElement>('#character-menu-add')!.addEventListener('click', () => {
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    window.dispatchEvent(new CustomEvent('tibia-character-lookup-request'));
+  });
+  menuList.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const selectedName = target.closest<HTMLElement>('[data-select-character]')?.dataset.selectCharacter;
+    const removedName = target.closest<HTMLElement>('[data-remove-character]')?.dataset.removeCharacter;
+    if (selectedName) {
+      const character = readCharacters().find((item) => item.name === selectedName);
+      if (character) selectCharacter(character);
+      menu.hidden = true;
+    }
+    if (removedName) {
+      const remaining = readCharacters().filter((item) => item.name !== removedName);
+      writeCharacters(remaining);
+      const next = selectedCharacter();
+      if (next) selectCharacter(next);
+      else {
+        localStorage.removeItem(selectedKey);
+        localStorage.removeItem(legacyKey);
+        showActiveCharacter(undefined);
+        renderMenu();
+        window.dispatchEvent(new CustomEvent('tibia-active-character-changed', { detail: null }));
+      }
+    }
+  });
+
+  window.addEventListener('tibia-character-selected', (event) => {
+    const character = (event as CustomEvent<StoredCharacter>).detail;
+    const characters = readCharacters().filter((item) => item.name !== character.name);
+    characters.push(character);
+    writeCharacters(characters);
+    selectCharacter(character);
+  });
+</script>
