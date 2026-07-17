@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="Tibia Calculators" description="Useful, fast calculators for Tibia players.">
+  <p class="eyebrow">Unofficial Tibia tools</p>
+  <h1>Useful numbers, without the spreadsheet.</h1>
+  <p class="lede">
+    A growing collection of small, focused calculators for Tibia players. Your saved
+    calculator sessions will stay in your browser unless you choose to export them.
+  </p>
+
+  <section class="card-grid" aria-label="Calculators">
+    <article class="card">
+      <p class="eyebrow">First calculator</p>
+      <h2>Speed Calculator</h2>
+      <p>Find speed breakpoints and see how your character's bonuses affect movement.</p>
+      <p><a href={`${base}calculators/speed/`}>Open the speed calculator →</a></p>
+    </article>
+  </section>
+</BaseLayout>
