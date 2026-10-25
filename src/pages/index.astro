@@ -204,6 +204,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     name: string; level: number; vocation: string; world: string; sex: string; residence: string;
     achievement_points: number; account_status: string; unlocked_titles: number; last_login: string;
   };
+  type CharacterLookupResponse = {
+    character?: { character?: Character; other_characters?: { name?: string }[] };
+  };
 
   const form = document.querySelector<HTMLFormElement>('#character-form')!;
   const input = document.querySelector<HTMLInputElement>('#character-name')!;
@@ -434,16 +437,48 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     submit.textContent = 'Looking up…';
 
     try {
-      const response = await fetch(`https://api.tibiadata.com/v4/character/${encodeURIComponent(name)}`);
-      const data = await response.json();
+      let response: Response;
+      try {
+        response = await fetch(`https://api.tibiadata.com/v5/character/${encodeURIComponent(name)}`);
+      } catch {
+        error.textContent = 'Could not reach TibiaData. Check your connection and try again.';
+        error.hidden = false;
+        return;
+      }
+      if (response.status === 404) {
+        error.textContent = 'Character not found. Check the spelling and try again.';
+        error.hidden = false;
+        return;
+      }
+      if (!response.ok) {
+        error.textContent = response.status === 400
+          ? 'Character name is invalid. Check the spelling and try again.'
+          : response.status === 502
+            ? 'TibiaData is temporarily unable to retrieve character data. Try again later.'
+            : `TibiaData returned an error (HTTP ${response.status}). Try again later.`;
+        error.hidden = false;
+        return;
+      }
+      let data: CharacterLookupResponse;
+      try {
+        data = await response.json();
+      } catch {
+        error.textContent = 'TibiaData returned an unexpected response. Try again later.';
+        error.hidden = false;
+        return;
+      }
       const character = data?.character?.character as Character | undefined;
-      if (!response.ok || !character?.name) throw new Error('not found');
+      if (!character?.name) {
+        error.textContent = 'TibiaData returned an unexpected response. Try again later.';
+        error.hidden = false;
+        return;
+      }
       const relatedNames = (data?.character?.other_characters ?? []).map((item: { name?: string }) => item.name).filter(Boolean);
       localStorage.setItem(suggestionKey, JSON.stringify([...new Set([...suggestionNames(), ...relatedNames])]));
       closeSuggestions();
       showCharacter(character);
     } catch {
-      error.textContent = 'Character not found. Check the spelling and try again.';
+      error.textContent = 'Unable to process the character data. Try again later.';
       error.hidden = false;
     } finally {
       submit.disabled = false;
